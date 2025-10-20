@@ -30,6 +30,8 @@
 
 #include "glut.h"
 
+#include "loadobjmtlfiles.h"
+
 
 
 //	This is a sample OpenGL / GLUT program
@@ -158,8 +160,6 @@ const GLfloat Colors[ ][3] =
 	{ 1., 0., 1. },		// magenta
 };
 
-// load object file
-extern "C" GLuint LoadObjMtlFiles( char *filename );
 
 // --------------------------- Constants / Globals ---------------------------
 #define MS_PER_CYCLE 10000    // 10 second cycle
@@ -175,6 +175,10 @@ GLuint Wall2DL = 0;
 GLuint Obj1DL = 0;   // OBJ loaded object (or fallback)
 GLuint Obj2DL = 0;
 GLuint Obj3DL = 0;
+GLuint ObjModelDL = 0; // Display list for loaded OBJ
+GLuint BunnyObj; // Display list for bunny OBJ
+GLuint DinoObj; // Display list for dino OBJ
+GLuint SalmonObj; // Display list for salmon OBJ
 
 float TimeFraction = 0.0f;
 
@@ -436,7 +440,7 @@ void Display()
     glLoadIdentity();
 
 	//set the view
-    gluLookAt(15.f, 8.f, 15.f, 0.f, 2.f, 0.f, 0.f, 1.f, 0.f);
+    gluLookAt(20.f, 8.f, 15.f, 0.f, 2.f, 0.f, 0.f, 1.f, 0.f);
 
     // Apply user rotation/scaling
     glRotatef((GLfloat)Yrot, 0.f, 1.f, 0.f);
@@ -474,7 +478,7 @@ void Display()
         glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 0.8f);
         glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.05f);
         glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.01f);
-        float brightness = 3.0f; // Only for point light
+        float brightness = 2.0f; // Only for point light
         GLfloat diffuse[]  = { LightColor[0] * brightness, LightColor[1] * brightness, LightColor[2] * brightness, 1.f };
         GLfloat specular[] = { LightColor[0] * brightness, LightColor[1] * brightness, LightColor[2] * brightness, 1.f };
         glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
@@ -505,6 +509,44 @@ void Display()
         glCallList(AxesList);
         glEnable(GL_LIGHTING);
     }
+
+    // Draw OBJ model with lighting
+
+	// --- BUNNY ---
+	// Bunny center: (0.0, 0.437, 0.0), span: (1.287, 0.875, 1.178)
+	// Largest span: 1.287 (X)
+    glPushMatrix();
+        glTranslatef(2.5f, 5.0f, 2.f); 
+        glScalef(20.f, 20.f, 20.f);  
+        SetMaterial(1.f, 0.8f, 0.6f, 10.f, 1); 
+        if (BunnyObj) glCallList(BunnyObj);
+    glPopMatrix();
+
+    // --- DINO ---
+    // Dino center: (-1.442, 0.186, 0.016), span: (17.716, 7.755, 5.857)
+    // Largest span: 17.716 (X)
+    float dinoTarget = 5.0f;
+    float dinoScale = dinoTarget / 17.716f;
+    glPushMatrix();
+        glTranslatef(-2.5f, 5.5f, -2.f); 
+        glScalef(dinoScale, dinoScale, dinoScale);
+        glTranslatef(1.442f, -0.186f, -0.016f); 
+        SetMaterial(0.6f, 1.f, 0.6f, 10.f, 1);
+        if (DinoObj) glCallList(DinoObj);
+    glPopMatrix();
+
+    // --- SALMON ---
+    // Salmon center: (0.0, 0.0, -0.858), span: (0.946, 1.895, 4.902)
+    // Largest span: 4.902 (Z)
+    float salmonTarget = 5.0f;
+    float salmonScale = salmonTarget / 4.902f;
+    glPushMatrix();
+        glTranslatef(2.5f, 6.0f, -2.f); 
+        glScalef(salmonScale, salmonScale, salmonScale);
+        glTranslatef(0.0f, 0.0f, 0.858f); 
+        SetMaterial(0.6f, 0.6f, 1.f, 10.f, 1);
+        if (SalmonObj) glCallList(SalmonObj);
+    glPopMatrix();
 
     glutSwapBuffers();
 }
@@ -833,6 +875,11 @@ void InitLists()
         glColor3f(1.0f, 1.0f, 1.0f);
         glutSolidSphere(0.15f, 20, 20);
     glEndList();
+
+    // Load OBJ model
+    BunnyObj = LoadObjMtlFiles((char*)"bunny.obj");
+	DinoObj = LoadObjMtlFiles((char*)"dino.obj");
+	SalmonObj = LoadObjMtlFiles((char*)"salmon.obj");
 
     if (DebugOn != 0)
         fprintf(stderr, "Finished InitLists.\n");
