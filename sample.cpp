@@ -449,23 +449,23 @@ void Display()
     glScalef(Scale, Scale, Scale);
 
     // ---------------- LIGHT ----------------
-    float radius = 8.0f;
+    float radius = 6.5f;
     float lightX = radius * cos(gLightAngle * M_PI / 180.0f);
     float lightZ = radius * sin(gLightAngle * M_PI / 180.0f);
-    float lightY = 8.0f;
+    float lightY = 7.0f;
     GLfloat lightPos[] = { lightX, lightY, lightZ, 1.0f };
     if (LightIsSpot) {
         // Spotlight setup
         GLfloat spotDir[] = { -lightX * 0.1f, -0.3f, -lightZ * 0.1f };
         glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
         glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, spotDir);
-        glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 80.0f);    // wider cone, softer edge
-        glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 10.0f);   // softer falloff
+        glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 90.0f);    // widest allowed cone
+        glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 1.0f);   // softer, less focused cone
         glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 0.8f);
         glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.05f);
         glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.01f);
         // Brighter spotlight
-        float spotBrightness = 6.0f; // Only for spot light
+        float spotBrightness = 4.0f; // Only for spot light
         GLfloat spotDiffuse[]  = { LightColor[0] * spotBrightness, LightColor[1] * spotBrightness, LightColor[2] * spotBrightness, 1.f };
         GLfloat spotSpecular[] = { LightColor[0] * spotBrightness, LightColor[1] * spotBrightness, LightColor[2] * spotBrightness, 1.f };
         glLightfv(GL_LIGHT0, GL_DIFFUSE, spotDiffuse);
@@ -491,16 +491,19 @@ void Display()
     glCallList(WallBackDL);
     glCallList(WallRightDL);
 
+    // Draw static circle for light path (XZ plane at lightY)
+	if (CircleOn) {
+		glDisable(GL_LIGHTING);
+		DrawCircle(0.f, lightY, 0.f, radius, 128);
+		glEnable(GL_LIGHTING);
+	}
     // Light sphere (unlit)
     glDisable(GL_LIGHTING);
     glPushMatrix();
         glTranslatef(lightX, lightY, lightZ);
         glCallList(LightBallList);
     glPopMatrix();
-    // Draw tracking circle if enabled
-    if (CircleOn) {
-        DrawCircle(lightX, lightY, lightZ, 0.6f, 64);
-    }
+
     glEnable(GL_LIGHTING);
 
     // Axes
@@ -528,7 +531,7 @@ void Display()
     float dinoTarget = 5.0f;
     float dinoScale = dinoTarget / 17.716f;
     glPushMatrix();
-        glTranslatef(-2.5f, 5.5f, -2.f); 
+        glTranslatef(-2.0f, 6.5f, -2.f); 
         glScalef(dinoScale, dinoScale, dinoScale);
         glTranslatef(1.442f, -0.186f, -0.016f); 
         SetMaterial(0.6f, 1.f, 0.6f, 10.f, 1);
@@ -541,7 +544,7 @@ void Display()
     float salmonTarget = 5.0f;
     float salmonScale = salmonTarget / 4.902f;
     glPushMatrix();
-        glTranslatef(2.5f, 6.0f, -2.f); 
+        glTranslatef(2.0f, 6.0f, -2.f); 
         glScalef(salmonScale, salmonScale, salmonScale);
         glTranslatef(0.0f, 0.0f, 0.858f); 
         SetMaterial(0.6f, 0.6f, 1.f, 10.f, 1);
@@ -806,10 +809,10 @@ void InitLists()
     if (DebugOn != 0)
         fprintf(stderr, "Starting InitLists.\n");
 
-   #define XSIDE 20.0f
-	#define ZSIDE 20.0f
-	#define NX 40
-	#define NZ 40
+   #define XSIDE 15.0f
+	#define ZSIDE 15.0f
+	#define NX 20
+	#define NZ 20
 	#define DX (XSIDE / (float)NX)
 	#define DZ (ZSIDE / (float)NZ)
 	#define X0 (-XSIDE / 2.0f)
@@ -834,7 +837,7 @@ void InitLists()
 	// Back wall (Z = Z0)
 	WallBackDL = glGenLists(1);
 	glNewList(WallBackDL, GL_COMPILE);
-		SetMaterial(0.3f, 0.45f, 0.3f, 5.f, 1); // wall 
+		SetMaterial(0.3f, 0.45f, 0.3f, 20.f, 1); // wall 
 		glNormal3f(0.f, 0.f, 1.f);
 		for (int i = 0; i < NZ; i++) {
 			glBegin(GL_QUAD_STRIP);
@@ -849,7 +852,7 @@ void InitLists()
 	// Left wall (X = X0)
 	WallRightDL = glGenLists(1);
 	glNewList(WallRightDL, GL_COMPILE);
-		SetMaterial(0.35f, 0.4f, 0.6f, 5.f, 1); // wall
+		SetMaterial(0.35f, 0.4f, 0.6f, 20.f, 1); // wall
 		glNormal3f(1.f, 0.f, 0.f);
 		for (int i = 0; i < NZ; i++) {
 			glBegin(GL_QUAD_STRIP);
@@ -873,7 +876,7 @@ void InitLists()
     LightBallList = glGenLists(1);
     glNewList(LightBallList, GL_COMPILE);
         glColor3f(1.0f, 1.0f, 1.0f);
-        glutSolidSphere(0.15f, 20, 20);
+        glutSolidSphere(0.20f, 20, 20);
     glEndList();
 
     // Load OBJ model
@@ -982,6 +985,9 @@ void Keyboard(unsigned char ch, int x, int y)
         case 't': // toggle tracking circle
             CircleOn = !CircleOn;
             break;
+		case 'a': case 'A': //toggle axes
+			AxesOn = !AxesOn;
+			break;
         case 27:
             exit(0);
             break;
