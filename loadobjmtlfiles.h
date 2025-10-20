@@ -1,20 +1,23 @@
 #ifndef LOADOBJFILE_H
 #define LOADOBJFILE_H
 
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#else
+#include <GL/gl.h>
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
 #include <ctype.h>
-#include <GL/gl.h>
 #include <vector>
 
 
 #define OBJDELIMS		" \t"
-
-const void  *	NULLPTR =     (void *)0;
-
-const char *	DELIMS = " \t";
+#define NULLPTR 0
+#define DELIMS " \t"
 
 struct Vertex
 {
@@ -38,6 +41,7 @@ struct face
 
 
 GLuint	LoadObjFile( char * );
+GLuint  LoadObjMtlFiles(char *name);
 
 void	Cross( float [3], float [3], float [3] );
 char *	ReadRestOfLine( FILE * );
